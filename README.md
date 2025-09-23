@@ -19,7 +19,7 @@
 ### 安装
 
 ```bash
-pnpm install -g i18n-cli
+npm install -g @zdoc.app/i18n-cli
 ```
 
 ### 初始化
