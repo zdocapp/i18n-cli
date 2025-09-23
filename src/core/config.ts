@@ -5,27 +5,47 @@ import { logger } from '../utils/logger.js';
 import 'dotenv/config'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 
 export const defaultConfig: I18nConfig = {
-  source_file: 'en-US.json',
-  source_lang: 'en-US',
-  target_langs: ['zh-CN'],
-  db_file: 'i18n.db.json',
+  source_file: 'src/locale/en-US.json', // 主语言文件, 相对于执行命令的路径，需要根据实际情况修改
+  source_lang: 'en-US', // 主语言
+  target_langs: ['zh-CN'], // 需要翻译的目标语言列表, 可配置多个
+  db_file: 'i18n.db.json', // 翻译缓存文件, 默认在当前目录生成，一般不需要修改
   service: {
-    provider: 'deepseek',
-    model: 'deepseek-chat',
-    base_url: '',
-    api_key: '{{OPENAI_API_KEY}}',
-    temperature: 0.3,
-    max_tokens: 4000,
-    compress_keys: false,
+    provider: 'deepseek', // 该字段在程序中未使用，可忽略
+    model: 'deepseek-chat', // 大模型名称，需要根据实际使用的服务商修改
+    base_url: 'https://api.deepseek.com', // API 请求地址，需要根据实际使用的服务商修改
+    api_key: '{{OPENAI_API_KEY}}', // API Key，支持使用环境变量 {{VAR_NAME}} 的形式, 或者直接写入实际的 key
+    temperature: 0.3, // https://api-docs.deepseek.com/zh-cn/quick_start/parameter_settings
+    max_tokens: 4000, // 程序目前按照 1000 tokens 拆分请求，max_tokens 保持 4000 即可
+    compress_keys: false, // 开启后，在将语言数据提交到大模型前，会将 key 替换为递增数字，节约 token, 但会丢失 key 的语义信息，可能会影响翻译效果
   },
+  /**
+   * 特定翻译的词汇表
+   * ```json
+   * e.g: {
+   *  "zh-CN": [{ "Crypto": "加密货币" }],
+   *  "ja": [{ "Crypto": "暗号通貨" }]
+   * }
+   * ```
+   */
   glossary: {},
+  // glossary: {
+  //   [key?: Locale]: { [originText: string]: string }[];
+  // };
+  /** 无需翻译的词汇、术语 */
   non_translatable: [],
   output: {
     format: 'nested', // nested | flat
     indent: 2, // JSON 缩进
   },
-  prompt_template: `
-你是一名专业的前端本地化(i18n)翻译专家，专门处理 Web 界面文案翻译。
+  /**
+   * 提示词模版-可根据自身需要随意调整提示词模版
+   *
+   * 以下固定占位符会在构建提示词阶段替换为实际值，可根据需要调整位置，不要修改名称：
+   * {{language}}
+   * {{glossary}}
+   * {{nonTranslatable}}
+   */
+  prompt_template: `你是一名专业的前端本地化(i18n)翻译专家，专门处理 Web 界面文案翻译。
 
 # 翻译任务
 将以下 JSON 对象中的界面文案翻译成{{language}}，用于网页显示
