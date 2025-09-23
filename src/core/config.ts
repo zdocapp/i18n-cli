@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { I18nConfig } from '../types/i18n.js';
+import { logger } from '../utils/logger.js';
+import 'dotenv/config'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 
 export const defaultConfig: I18nConfig = {
   source_file: 'en-US.json',
@@ -11,7 +13,7 @@ export const defaultConfig: I18nConfig = {
     provider: 'deepseek',
     model: 'deepseek-chat',
     base_url: '',
-    api_key: 'YOUR_API_KEY',
+    api_key: '{{OPENAI_API_KEY}}',
     temperature: 0.3,
     max_tokens: 4000,
     compress_keys: false,
@@ -80,6 +82,34 @@ export function loadConfig(configPath = 'i18n.config.json'): I18nConfig {
   const raw = fs.readFileSync(absPath, 'utf-8');
   const config = JSON.parse(raw) as I18nConfig;
 
-  // TODO: 可以增加必填字段校验
+  // 替换环境变量：{{API_KEY}} => process.env.API_KEY
+  const match = config.service.api_key.match(/^\{\{(\w+)\}\}$/);
+  if (match) {
+    config.service.api_key = resolveEnvPlaceholder(config.service.api_key);
+
+    logger.info(`Resolved API key from environment variable, env key: process.env.${match[1]}`);
+  }
+
   return config;
+}
+
+function resolveEnvPlaceholder(str: string) {
+  // const value = str.replace(/\{\{(\w+)\}\}/g, (_, name) => process.env[name] ?? '');
+  const match = str.match(/^\{\{(\w+)\}\}$/);
+  const name = match ? match[1] : null;
+
+  if (!name) {
+    return str; // 不符合 {{VAR_NAME}} 格式，原样返回
+  }
+
+  const value = process.env[name] ?? '';
+
+  if (!value) {
+    logger.error(
+      `Environment variable for placeholder ${str} is not set or empty. Please set ${name} in your env file.`,
+    );
+    process.exit(1);
+  }
+
+  return value;
 }

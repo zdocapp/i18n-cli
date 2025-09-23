@@ -24,6 +24,7 @@ async function translateI18nEntries(
   });
   logger.info('Prompt:');
   logger.info(prompt);
+  logger.info(JSON.stringify(entries));
 
   const { base_url, api_key, model, temperature, max_tokens } = service;
 
@@ -102,7 +103,6 @@ export async function translateTempData(
   for (let i = 0, len = batches.length; i < len; i++) {
     const batch = batches[i];
     logger.info(`开始翻译 ${i + 1}/${len}`);
-    logger.info(JSON.stringify(batch));
 
     const translated = await translateI18nEntries(batch, targetLang, config);
 

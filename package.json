@@ -1,6 +1,6 @@
 {
   "name": "@zdoc.app/i18n-cli",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -36,6 +36,7 @@
   "dependencies": {
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
+    "dotenv": "^17.2.2",
     "openai": "^5.21.0"
   },
   "devDependencies": {

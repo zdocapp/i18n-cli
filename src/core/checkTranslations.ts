@@ -2,11 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { I18nConfig } from '../types/i18n.js';
 import { logger } from '../utils/logger.js';
+import { loadConfig } from './config.js';
 
 export async function checkTranslations(configPath: string) {
-  const resolvedPath = path.resolve(process.cwd(), configPath);
-  const rawConfig = await fs.readFile(resolvedPath, 'utf-8');
-  const config: I18nConfig = JSON.parse(rawConfig);
+  const config = loadConfig(configPath);
 
   const mainFilePath = path.resolve(process.cwd(), config.source_file);
   const mainRaw = await fs.readFile(mainFilePath, 'utf-8');
