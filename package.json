@@ -1,6 +1,6 @@
 {
   "name": "@zdoc.app/i18n-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -14,10 +14,24 @@
   "engines": {
     "node": ">=18"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "i18n",
+    "cli",
+    "localization",
+    "translation",
+    "internationalization",
+    "openai",
+    "multilingual",
+    "language"
+  ],
+  "author": "neo.dowithless@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dowithless/i18n-cli.git"
+  },
   "license": "ISC",
   "description": "A CLI tool for internationalization using OpenAI",
+  "homepage": "https://github.com/dowithless/i18n-cli#readme",
   "packageManager": "pnpm@10.2.1+sha512.398035c7bd696d0ba0b10a688ed558285329d27ea994804a52bad9167d8e3a72bcb993f9699585d3ca25779ac64949ef422757a6c31102c12ab932e5cbe5cc92",
   "dependencies": {
     "chalk": "^5.6.2",
