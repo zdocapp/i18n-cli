@@ -6,7 +6,7 @@ import { checkCommand } from '../commands/check.js';
 
 const program = new Command();
 
-program.name('i18n').description('A CLI tool for managing multilingual translations').version('0.0.5');
+program.name('i18n').description('A CLI tool for managing multilingual translations').version('0.0.6');
 
 program.addCommand(initCommand);
 program.addCommand(runCommand);
