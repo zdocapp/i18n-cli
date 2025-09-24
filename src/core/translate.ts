@@ -85,6 +85,7 @@ export async function translateTempData(
   }
 
   if (Object.keys(messages).length === 0) {
+    logger.info('没有需要翻译的内容，跳过');
     return tempData; // 无需翻译
   }
 

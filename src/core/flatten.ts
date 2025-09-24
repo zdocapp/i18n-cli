@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual.js';
 import { I18nDBEntry, Locale } from '../types/i18n';
 
 export interface PrepareOptions {
@@ -28,25 +29,25 @@ function flattenObject(obj: Record<string, any>, prefix = '', result: Record<str
  */
 export function flattenAndPrepare(sourceData: Record<string, any>, options: PrepareOptions): I18nDBEntry {
   const { source_lang, cache = {} } = options;
-
   const flatSource = flattenObject(sourceData);
   const tempData: I18nDBEntry = {};
 
   for (const key in flatSource) {
-    let value = flatSource[key];
+    const value = flatSource[key];
 
-    if (!cache[key]) {
-      // key 不存在 → 新增
+    const cachedEntry = cache[key];
+    if (!cachedEntry) {
       tempData[key] = { [source_lang]: value };
+      continue;
+    }
+
+    const cachedSourceValue = cachedEntry[source_lang];
+    if (isEqual(cachedSourceValue, value)) {
+      // 深度相等 → 复用整个缓存（包含其他语言和 last_update）
+      tempData[key] = { ...cachedEntry };
     } else {
-      const cachedEntry = cache[key];
-      if (cachedEntry[source_lang] === value) {
-        // 文案未变 → 复用整个缓存
-        tempData[key] = { ...cachedEntry };
-      } else {
-        // 文案变更 → 替换原文，清空其他语言字段
-        tempData[key] = { [source_lang]: value };
-      }
+      // 内容确实变更 → 只保留源语言（按你原逻辑）
+      tempData[key] = { [source_lang]: value };
     }
   }
 
