@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc",
     "prettier": "prettier . --write",
-    "test": "pnpm vitest"
+    "test": "pnpm vitest",
+    "release": "node --loader ts-node/esm script/release.ts"
   },
   "engines": {
     "node": ">=18"
@@ -45,6 +46,7 @@
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.5.0",
     "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
