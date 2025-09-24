@@ -36,7 +36,7 @@ function main() {
   // 3. git commit & push
   run('git add .');
   run(`git commit -m "chore: release v${newVersion}"`);
-  run('git push');
+  run('git push origin main');
 
   // 4. 打 tag 并 push
   run(`git tag v${newVersion}`);
