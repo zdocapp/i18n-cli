@@ -22,7 +22,7 @@ export type I18nDBEntry = Record<string, EntryValue>; // key -> EntryValue
 export interface I18nDB {
   source_lang: Locale;
   non_translatable: string[];
-  glossary: { [key: string]: string }[];
+  glossary: { [key in Locale]?: { [originText: string]: string }[] };
   entries: I18nDBEntry;
 }
 

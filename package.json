@@ -39,7 +39,8 @@
     "commander": "^14.0.1",
     "dotenv": "^17.2.2",
     "lodash": "^4.17.21",
-    "openai": "^5.21.0"
+    "openai": "^5.21.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/commander": "^2.12.5",
