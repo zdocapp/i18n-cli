@@ -34,7 +34,8 @@ export function dbToSheetData(db: I18nDB): any[][] {
 
     // 各语言文本
     for (const lang of langList) {
-      row.push(entry[lang as Locale] ?? '');
+      const entryValue = entry[lang as Locale];
+      row.push(typeof entryValue === 'string' ? entryValue : JSON.stringify(entryValue));
 
       if (lang !== source_lang) {
         // glossary（匹配 key）

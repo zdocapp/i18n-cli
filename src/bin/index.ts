@@ -4,6 +4,7 @@ import { initCommand } from '../commands/init.js';
 import { runCommand } from '../commands/run.js';
 import { checkCommand } from '../commands/check.js';
 import { exportCommand } from '../commands/export.js';
+import { importCommand } from '../commands/import.js';
 
 const program = new Command();
 
@@ -13,5 +14,6 @@ program.addCommand(initCommand);
 program.addCommand(runCommand);
 program.addCommand(checkCommand);
 program.addCommand(exportCommand);
+program.addCommand(importCommand);
 
 program.parse(process.argv);
