@@ -9,7 +9,7 @@ import { I18nDB, Locale } from '../types/i18n.js'; // 假设你的类型定义�
 export function dbToSheetData(db: I18nDB): any[][] {
   const { source_lang, entries, glossary } = db;
 
-  // 收集所有语言列
+  // 收集所有语言列（排除 last_update）
   const allLangs = new Set<Locale>();
   for (const key in entries) {
     const entry = entries[key];
@@ -24,7 +24,13 @@ export function dbToSheetData(db: I18nDB): any[][] {
   const langList = [source_lang, ...Array.from(allLangs).filter((l) => l !== source_lang)];
 
   // 表头
-  const header = ['key', ...langList, 'glossary', 'last_update'];
+  const header: string[] = ['key', source_lang];
+  for (const lang of langList) {
+    if (lang !== source_lang) {
+      header.push(lang, `${lang}_glossary`);
+    }
+  }
+  header.push('last_update');
 
   // 数据行
   const rows: any[][] = [];
@@ -32,18 +38,22 @@ export function dbToSheetData(db: I18nDB): any[][] {
     const entry = entries[key];
     const row: any[] = [key];
 
-    // 各语言文本
-    for (const lang of langList) {
-      const entryValue = entry[lang as Locale];
-      row.push(typeof entryValue === 'string' ? entryValue : JSON.stringify(entryValue));
+    // 源语言
+    const sourceLangText = entry[source_lang];
+    row.push(typeof sourceLangText === 'string' ? sourceLangText : JSON.stringify(sourceLangText));
 
-      if (lang !== source_lang) {
-        // glossary（匹配 key）
-        const sourceLangText = entry[source_lang];
-        if (typeof sourceLangText === 'string') {
-          const glossaryItem = glossary[lang]?.find((g) => Object.keys(g).some((k) => k === sourceLangText));
-          row.push(glossaryItem ? glossaryItem[sourceLangText] : '');
-        }
+    // 目标语言 + glossary
+    for (const lang of langList) {
+      if (lang === source_lang) continue;
+
+      const entryValue = entry[lang];
+      row.push(typeof entryValue === 'string' ? entryValue : entryValue ? JSON.stringify(entryValue) : '');
+
+      if (typeof sourceLangText === 'string') {
+        const glossaryItem = glossary[lang]?.find((g) => Object.prototype.hasOwnProperty.call(g, sourceLangText));
+        row.push(glossaryItem ? glossaryItem[sourceLangText] : '');
+      } else {
+        row.push('');
       }
     }
 
