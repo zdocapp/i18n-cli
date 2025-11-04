@@ -34,6 +34,8 @@ export interface I18nConfig {
   source_lang: Locale;
   target_langs: Locale[];
   db_file: string;
+  /** 编辑器脚本文件 */
+  editor_js_file: string;
   service: {
     provider: string;
     model: string;

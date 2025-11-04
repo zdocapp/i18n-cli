@@ -7,6 +7,7 @@ const config: I18nConfig = {
   source_lang: 'en-US',
   target_langs: ['zh-TW'],
   db_file: 'i18n.db.json',
+  editor_js_file: '',
   service: {
     provider: 'deepseek',
     model: 'deepseek-chat',

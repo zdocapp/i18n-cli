@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { chunkByTokens } from '../chunk.js';
 import { estimateTokens } from '../../utils/tokenizer.js';
 
-describe.only('chunkByTokens', () => {
+describe('chunkByTokens', () => {
   it('可以正确拆分', () => {
     const entries = {
       key1: '1'.repeat(4000),

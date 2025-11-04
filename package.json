@@ -7,7 +7,7 @@
     "i18n": "./dist/bin/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/editor.template.js dist/editor.template.js",
     "prettier": "prettier . --write",
     "test": "pnpm vitest",
     "release": "node --loader ts-node/esm script/release.ts"

@@ -10,6 +10,7 @@ import { translateTempData } from '../core/translate.js';
 import { I18nDB, I18nDBEntry, Locale } from '../types/i18n.js';
 import { I18nConfig } from '../types/i18n.js';
 import { checkTranslations } from '../core/checkTranslations.js';
+import { generateEditorJS } from '../core/generateEditorJS.js';
 
 interface RunContext {
   lang: Locale;
@@ -46,6 +47,12 @@ async function processLanguage(ctx: RunContext): Promise<I18nDB> {
     // 导出单个语言包
     exportI18n(merged, config, [lang]);
     logger.info(`导出语言包完成 -> ${lang}`);
+
+    // 生成 editor.js
+    if (config.editor_js_file) {
+      generateEditorJS(merged, config);
+      logger.info(`生成 editor.js 完成`);
+    }
 
     return merged;
   } catch (err) {

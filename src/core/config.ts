@@ -9,6 +9,7 @@ export const defaultConfig: I18nConfig = {
   source_lang: 'en-US', // 主语言
   target_langs: ['zh-CN'], // 需要翻译的目标语言列表, 可配置多个
   db_file: 'i18n.db.json', // 翻译缓存文件, 默认在当前目录生成，一般不需要修改
+  editor_js_file: '', // 编辑器脚本文件路径，留空则不生成。 示例：.i18n/editor.js
   service: {
     provider: 'deepseek', // 该字段在程序中未使用，可忽略
     model: 'deepseek-chat', // 大模型名称，需要根据实际使用的服务商修改
