@@ -68,13 +68,17 @@ export function generateEditorJS(i18nDB: I18nDB, config: I18nConfig) {
   const templatePath = path.resolve(__dirname, '../editor.template.js');
   const scriptTemplate = fs.readFileSync(templatePath, 'utf-8');
 
-  const scriptContent = `const reverseMap = ${JSON.stringify(reverseMap, null, 2)};
-  
+  const scriptContent = `/** ========== i18n-cli 动态插入内容 开始========== */
 const i18nDB = ${JSON.stringify(i18nDB, null, 2)};
 
 let targetLang = '${config.target_langs[0]}';
 
-${scriptTemplate}`;
+/** ========== i18n-cli 动态生成内容 结束========== */
+
+/** ========== 模版内容 开始 ========== */
+${scriptTemplate}
+/** ========== 模版内容 结束 ========== */
+`;
 
   // 输出文件路径
   const filePath = config.editor_js_file || '.i18n/editor.js';

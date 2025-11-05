@@ -55,6 +55,21 @@ let currentEditor = null;
 let mutationObserver = null;
 let updateTimer = null;
 
+// i18nDB 由被外部插入到顶部
+
+const reverseMap = generateReverseMap(
+  i18nDB.entries,
+  Object.keys(i18nDB.entries).reduce((langs, key) => {
+    const entry = i18nDB.entries[key];
+    Object.keys(entry).forEach((lang) => {
+      if (lang !== 'last_update' && !langs.includes(lang)) {
+        langs.push(lang);
+      }
+    });
+    return langs;
+  }, []),
+);
+
 // -------- 工具函数 --------
 function normalizeText(text = '') {
   return text.replace(/\s+/g, ' ').trim();
@@ -78,6 +93,40 @@ function getCurrentDisplayValue(normalizedText, keys) {
     }
   }
   return normalizedText;
+}
+
+function generateReverseMap(entries, target_langs) {
+  const reverseMap = {};
+
+  // 遍历所有条目
+  for (const key in entries) {
+    const entry = entries[key];
+
+    // 遍历每种语言
+    for (const lang of target_langs) {
+      const text = entry[lang];
+
+      if (!text) continue;
+
+      // 不支持非字符串的反查
+      if (typeof text !== 'string') continue;
+
+      // 确保该语言在 reverseMap 中存在
+      if (!reverseMap[lang]) {
+        reverseMap[lang] = {};
+      }
+
+      // 初始化该文本的反查数组
+      if (!reverseMap[lang][text]) {
+        reverseMap[lang][text] = [];
+      }
+
+      // 将键添加到对应的文本下
+      reverseMap[lang][text].push(key);
+    }
+  }
+
+  return reverseMap;
 }
 
 // -------- DOM 遍历和标记 --------
@@ -112,6 +161,64 @@ function markMatchedTextNodes() {
 
     const matchingKeys = reverseMap[targetLang]?.[normalizedText];
     if (!matchingKeys) return;
+
+    // 如果节点已被修改，跳过覆盖
+    if (node.parentElement?.dataset?.i18nModified === 'true') return;
+
+    const currentDisplayValue = getCurrentDisplayValue(normalizedText, matchingKeys);
+
+    const span = document.createElement('span');
+    span.setAttribute(HIGHLIGHT_ATTR, 'true');
+    span.className = 'i18n-editable';
+    span.style.outline = '1px dashed rgba(255, 99, 71, 0.8)';
+    span.style.cursor = 'pointer';
+    span.style.borderRadius = '2px';
+    span.dataset.i18nKeys = JSON.stringify(matchingKeys);
+    span.dataset.originalText = originalText;
+    span.dataset.normalizedText = normalizedText;
+    span.textContent = currentDisplayValue;
+
+    node.parentNode.replaceChild(span, node);
+  });
+}
+
+function markTextNodesWithin(root) {
+  if (!root || !(root instanceof Node)) return;
+
+  // 忽略编辑器 UI 自己（右下角面板或编辑弹窗）
+  if (root.closest?.(`.${WRAPPER_CLASS}`) || root.classList?.contains('i18n-edit-overlay')) {
+    return;
+  }
+
+  // 递归地找到 root 下的所有文本节点
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node) {
+        if (!node.nodeValue || !normalizeText(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement?.closest(`.${WRAPPER_CLASS}`)) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement?.classList.contains('i18n-edit-overlay')) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement?.hasAttribute(HIGHLIGHT_ATTR)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    },
+    false,
+  );
+
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+
+  nodes.forEach((node) => {
+    const originalText = node.nodeValue;
+    const normalizedText = normalizeText(originalText);
+    if (!normalizedText) return;
+
+    const matchingKeys = reverseMap[targetLang]?.[normalizedText];
+    if (!matchingKeys) return;
+
+    // 如果该节点所在元素已标记为用户修改过，则跳过
+    if (node.parentElement?.dataset?.i18nModified === 'true') return;
 
     const currentDisplayValue = getCurrentDisplayValue(normalizedText, matchingKeys);
 
@@ -321,10 +428,6 @@ function createButtonRow(targetElement, selectedKey, overlay) {
 }
 
 function handleSave(targetElement, selectedKey, overlay) {
-  // const textarea = overlay.querySelector('textarea');
-  // const newValue = textarea.value;
-  // const oldValue = i18nDB.entries[selectedKey]?.[targetLang] || '';
-
   const keyToSave = overlay._selectedKey || selectedKey; // ✅ 优先用用户当前选中的键
   const textarea = overlay.querySelector('textarea');
   const newValue = textarea.value;
@@ -346,6 +449,9 @@ function handleSave(targetElement, selectedKey, overlay) {
 
   // 更新页面显示
   targetElement.textContent = newValue;
+  // ✅ 在元素上标记已修改
+  targetElement.dataset.i18nModified = 'true';
+
   closeEditor();
 }
 
@@ -381,7 +487,7 @@ function handleEditableSpanClick(event) {
 function activateEditMode() {
   injectEditorStyles();
   createControlPanel();
-  markMatchedTextNodes();
+  // markMatchedTextNodes();
 
   // 先初始化一遍
   removeAllMarkers();
@@ -392,28 +498,31 @@ function activateEditMode() {
 
   // ✅ 启动 MutationObserver，监听 DOM 变化
   if (!mutationObserver) {
+    let updateTimer = null;
     mutationObserver = new MutationObserver((mutations) => {
-      let needUpdate = false;
-
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
-          needUpdate = true;
-          console.log('needUpdate', needUpdate);
-          break;
+      clearTimeout(updateTimer);
+      updateTimer = setTimeout(() => {
+        const addedNodes = [];
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            mutation.addedNodes.forEach((n) => addedNodes.push(n));
+          }
         }
-      }
+        if (addedNodes.length === 0) return;
 
-      if (needUpdate) {
-        clearTimeout(updateTimer);
-        updateTimer = setTimeout(() => {
-          removeAllMarkers();
-          markMatchedTextNodes();
-          document.querySelectorAll(`span[${HIGHLIGHT_ATTR}]`).forEach((span) => {
+        addedNodes.forEach((node) => {
+          markTextNodesWithin(node);
+        });
+
+        document.querySelectorAll(`span[${HIGHLIGHT_ATTR}]`).forEach((span) => {
+          if (!span._i18nClickBound) {
             span.addEventListener('click', handleEditableSpanClick);
-          });
-          console.log('[i18n-editor] DOM 变化检测到，已更新可编辑文本标记。');
-        }, 300); // 防抖 300ms
-      }
+            span._i18nClickBound = true;
+          }
+        });
+
+        console.log('[i18n-editor] 检测到 DOM 变化，已为新增内容添加 i18n 编辑标记。');
+      }, 300); // 防抖
     });
 
     mutationObserver.observe(document.body, { childList: true, subtree: true });
