@@ -1,0 +1,55 @@
+{
+  "name": "@zdoc.app/i18n-cli",
+  "version": "0.0.8",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "i18n": "./dist/bin/index.js"
+  },
+  "scripts": {
+    "dev": "tsc && cp src/editor.template.js dist/editor.template.js",
+    "build": "tsc && cp src/editor.template.js dist/editor.template.js",
+    "prettier": "prettier . --write",
+    "test": "pnpm vitest",
+    "release": "node --loader ts-node/esm script/release.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "i18n",
+    "cli",
+    "localization",
+    "translation",
+    "internationalization",
+    "openai",
+    "multilingual",
+    "language"
+  ],
+  "author": "neo.dowithless@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zdocapp/i18n-cli.git"
+  },
+  "license": "MIT",
+  "description": "A CLI tool for internationalization using OpenAI",
+  "homepage": "https://github.com/zdocapp/i18n-cli#readme",
+  "packageManager": "pnpm@10.2.1+sha512.398035c7bd696d0ba0b10a688ed558285329d27ea994804a52bad9167d8e3a72bcb993f9699585d3ca25779ac64949ef422757a6c31102c12ab932e5cbe5cc92",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.1",
+    "dotenv": "^17.2.2",
+    "lodash": "^4.17.21",
+    "openai": "^5.21.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/commander": "^2.12.5",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.5.0",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
