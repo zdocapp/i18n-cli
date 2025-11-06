@@ -1,0 +1,31 @@
+{
+  "source_lang": "zh-CN",
+  "non_translatable": [],
+  "glossary": {},
+  "entries": {
+    "welcome_message": {
+      "zh-TW": "歡迎使用 i18n-cli！",
+      "zh-CN": "欢迎使用 i18n-cli！",
+      "last_update": "2025-11-05T03:55:19.326Z",
+      "en-US": "Welcome to i18n-cli!"
+    },
+    "hello": {
+      "zh-TW": "{name}, 你好！",
+      "zh-CN": "{name}, 你好！",
+      "last_update": "2025-11-05T03:55:19.326Z",
+      "en-US": "{name}, hello!"
+    },
+    "hello2": {
+      "en-US": "Hello, {name}!",
+      "zh-CN": "你好, {name}!",
+      "last_update": "2025-11-05T06:43:24.421Z",
+      "zh-TW": "你好, {name}！"
+    },
+    "hello3": {
+      "en-US": "{0} World",
+      "zh-CN": "{0} 世界",
+      "last_update": "2025-11-05T06:50:12.931Z",
+      "zh-TW": "{0} 世界"
+    }
+  }
+}

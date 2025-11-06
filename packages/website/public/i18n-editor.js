@@ -1,3 +1,41 @@
+/** ========== i18n-cli 动态插入内容 开始========== */
+const i18nDB = {
+  "source_lang": "zh-CN",
+  "non_translatable": [],
+  "glossary": {},
+  "entries": {
+    "welcome_message": {
+      "zh-TW": "歡迎使用 i18n-cli！",
+      "zh-CN": "欢迎使用 i18n-cli！",
+      "last_update": "2025-11-05T03:55:19.326Z",
+      "en-US": "Welcome to i18n-cli!"
+    },
+    "hello": {
+      "zh-TW": "{name}, 你好！",
+      "zh-CN": "{name}, 你好！",
+      "last_update": "2025-11-05T03:55:19.326Z",
+      "en-US": "{name}, hello!"
+    },
+    "hello2": {
+      "en-US": "Hello, {name}!",
+      "zh-CN": "你好, {name}!",
+      "last_update": "2025-11-05T06:43:24.421Z",
+      "zh-TW": "你好, {name}！"
+    },
+    "hello3": {
+      "en-US": "{0} World",
+      "zh-CN": "{0} 世界",
+      "last_update": "2025-11-05T06:50:12.931Z",
+      "zh-TW": "{0} 世界"
+    }
+  }
+};
+
+let targetLang = 'en-US';
+
+/** ========== i18n-cli 动态生成内容 结束========== */
+
+/** ========== 模版内容 开始 ========== */
 /**
  * 国际化文本编辑器
  * 功能：在页面上标记可编辑的国际化文本，提供可视化编辑界面
@@ -752,3 +790,5 @@ function switchLanguage(language) {
 injectEditorStyles();
 createControlPanel();
 console.log('[i18n-editor] 就绪。使用右下角的"切换i18n编辑模式"按钮开始编辑。');
+
+/** ========== 模版内容 结束 ========== */
