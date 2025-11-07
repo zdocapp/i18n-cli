@@ -2,5 +2,6 @@
   "welcome_message": "Welcome to i18n-cli!",
   "hello": "{name}, hello!",
   "hello2": "Hello, {name}!",
-  "hello3": "{0} World"
+  "hello3": "{0} World",
+  "address": "{account}{'@'}{domain}"
 }

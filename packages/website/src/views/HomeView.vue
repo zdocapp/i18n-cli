@@ -20,12 +20,18 @@ const { locale } = useI18n()
       </button>
     </div>
 
+    <div class="divider divider-start mt-10">An example</div>
     <h1>{{ $t('welcome_message') }}</h1>
 
+    <h2 class="my-10 font-bold text-lg">Message Format Syntax</h2>
+    <div class="divider divider-start mt-10">Named interpolation</div>
     <p>{{ $t('hello', { name: 'i18n-cli' }) }}</p>
-
     <p>{{ $t('hello2', { name: 'i18n-cli' }) }}</p>
 
+    <div class="divider divider-start mt-10">List interpolation</div>
     <p>{{ $t('hello3', ['hello']) }}</p>
+
+    <div class="divider divider-start mt-10">Literal interpolation</div>
+    <p>{{ $t('address', { account: 'foo', domain: 'domain.com' }) }}</p>
   </main>
 </template>

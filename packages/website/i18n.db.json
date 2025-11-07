@@ -26,6 +26,12 @@
       "zh-CN": "{0} 世界",
       "last_update": "2025-11-05T06:50:12.931Z",
       "zh-TW": "{0} 世界"
+    },
+    "address": {
+      "en-US": "{account}{'@'}{domain}",
+      "zh-CN": "{account}{'@'}{domain}",
+      "last_update": "2025-11-07T03:03:06.616Z",
+      "zh-TW": "{account}{'@'}{domain}"
     }
   }
 }

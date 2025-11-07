@@ -27,6 +27,18 @@ const i18nDB = {
       "zh-CN": "{0} 世界",
       "last_update": "2025-11-05T06:50:12.931Z",
       "zh-TW": "{0} 世界"
+    },
+    "address": {
+      "en-US": "{account}{'@'}{domain}",
+      "zh-CN": "{account}{'@'}{domain}",
+      "last_update": "2025-11-07T03:03:06.616Z",
+      "zh-TW": "{account}{'@'}{domain}"
+    },
+    "hello4": {
+      "en-US": "hello <br> world",
+      "zh-CN": "hello <br> world",
+      "last_update": "2025-11-07T05:32:46.697Z",
+      "zh-TW": "hello <br> world"
     }
   }
 };
@@ -105,35 +117,72 @@ const reverseMap = generateReverseMap(
   }, []),
 );
 
-// ========== 辅助函数：把 pattern 转为正则并提取占位符名列表 ==========
+// ========== 改进的辅助函数：支持字面量插值的 pattern 解析 ==========
 function patternToRegexAndNames(patternText) {
   const parts = [];
   const names = [];
+  const literals = [];
   let lastIndex = 0;
+
+  // 改进的正则：区分 {variable} 和 {'literal'} 两种模式
   const placeholderRegex = /\{([^}]+)\}/g;
   let match;
 
   while ((match = placeholderRegex.exec(patternText)) !== null) {
     const before = patternText.slice(lastIndex, match.index);
     parts.push(escapeForRegex(before));
-    parts.push('(.+?)');
-    names.push(match[1]);
+
+    const content = match[1];
+
+    // 检查是否是字面量插值 {'literal'}
+    if (content.startsWith("'") && content.endsWith("'")) {
+      // 字面量插值：直接使用字面值
+      const literalValue = content.slice(1, -1);
+      parts.push(escapeForRegex(literalValue));
+      literals.push({
+        index: match.index,
+        value: literalValue,
+      });
+    } else {
+      // 变量插值：使用捕获组
+      parts.push('(.+?)');
+      names.push(content);
+    }
+
     lastIndex = match.index + match[0].length;
   }
 
   parts.push(escapeForRegex(patternText.slice(lastIndex)));
   const regexString = '^' + parts.join('') + '$';
   const regex = new RegExp(regexString);
-  return { regex: regex, names: names };
+  return { regex: regex, names: names, literals: literals };
 }
 
 function escapeForRegex(text) {
   return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-// ========== 辅助函数：用捕获值把模板渲染出来 ==========
-function renderTemplateUsingMatch(templateText, names, matchGroups) {
-  return templateText.replace(/\{([^}]+)\}/g, function (full, key) {
+// ========== 改进的辅助函数：支持字面量插值的模板渲染 ==========
+function renderTemplateUsingMatch(templateText, names, matchGroups, literals) {
+  let result = templateText;
+
+  // 先处理字面量插值 - 将 {'literal'} 替换为 literal
+  literals.forEach(function (literal) {
+    const literalPlaceholder = `{'${literal.value}'}`;
+    result = result.replace(new RegExp(escapeForRegex(literalPlaceholder), 'g'), literal.value);
+  });
+
+  // 然后处理变量插值
+  result = result.replace(/\{([^}]+)\}/g, function (full, key) {
+    // 跳过已经被处理的字面量（理论上不应该再出现，但为了安全）
+    if (
+      literals.some(function (literal) {
+        return `{'${literal.value}'}` === full || literal.value === key;
+      })
+    ) {
+      return full;
+    }
+
     if (/^\d+$/.test(key)) {
       const index = parseInt(key, 10);
       return matchGroups[index + 1] !== undefined ? matchGroups[index + 1] : full;
@@ -146,6 +195,30 @@ function renderTemplateUsingMatch(templateText, names, matchGroups) {
 
     return full;
   });
+
+  return result;
+}
+
+// ========== 新函数：渲染页面显示文本 ==========
+function renderDisplayText(templateText, placeholderNames, placeholderValues, literals) {
+  // 在页面上显示时，我们需要使用实际的占位符值来渲染
+  let result = templateText;
+
+  // 处理字面量插值
+  literals.forEach(function (literal) {
+    const literalPlaceholder = `{'${literal.value}'}`;
+    result = result.replace(new RegExp(escapeForRegex(literalPlaceholder), 'g'), literal.value);
+  });
+
+  // 处理变量插值
+  placeholderNames.forEach(function (name, index) {
+    const value = placeholderValues[index];
+    if (value !== undefined) {
+      result = result.replace(new RegExp(`\\{${escapeForRegex(name)}\\}`, 'g'), value);
+    }
+  });
+
+  return result;
 }
 
 // -------- 工具函数 --------
@@ -219,6 +292,7 @@ function processTextNode(node) {
   let matchingKeys = reverseMap[targetLang]?.[normalizedText];
   let matchedNames = null;
   let matchedGroups = null;
+  let matchedLiterals = null;
 
   if (!matchingKeys) {
     const langMap = reverseMap[targetLang] || {};
@@ -226,6 +300,7 @@ function processTextNode(node) {
 
     for (let i = 0; i < patternTexts.length; i++) {
       const patternText = patternTexts[i];
+      // 检查是否包含插值（变量或字面量）
       if (/\{[^}]+\}/.test(patternText)) {
         const regexAndNames = patternToRegexAndNames(patternText);
         const match = regexAndNames.regex.exec(normalizedText);
@@ -233,6 +308,7 @@ function processTextNode(node) {
           matchingKeys = langMap[patternText];
           matchedNames = regexAndNames.names;
           matchedGroups = match;
+          matchedLiterals = regexAndNames.literals;
           break;
         }
       }
@@ -245,7 +321,7 @@ function processTextNode(node) {
   if (matchedGroups && matchingKeys.length > 0) {
     const chosenKey = matchingKeys[0];
     const templateText = i18nDB.entries[chosenKey]?.[targetLang] || normalizedText;
-    currentDisplayValue = renderTemplateUsingMatch(templateText, matchedNames, matchedGroups);
+    currentDisplayValue = renderTemplateUsingMatch(templateText, matchedNames, matchedGroups, matchedLiterals || []);
   } else {
     currentDisplayValue = getCurrentDisplayValue(normalizedText, matchingKeys);
   }
@@ -262,9 +338,11 @@ function processTextNode(node) {
   if (matchedNames && matchedGroups) {
     span.dataset.placeholderNames = JSON.stringify(matchedNames);
     span.dataset.placeholderValues = JSON.stringify(matchedGroups.slice(1));
+    span.dataset.literals = JSON.stringify(matchedLiterals || []);
   } else {
     span.dataset.placeholderNames = JSON.stringify([]);
     span.dataset.placeholderValues = JSON.stringify([]);
+    span.dataset.literals = JSON.stringify([]);
   }
 
   span.textContent = currentDisplayValue;
@@ -644,33 +722,35 @@ function handleSave(targetElement, selectedKey, overlay) {
   reverseMap[targetLang][newValue] = reverseMap[targetLang][oldValue] || [selectedKey];
   delete reverseMap[targetLang][oldValue];
 
+  // 修复：在页面上显示时，使用实际的占位符值来渲染
   let renderedForDisplay = newValue;
 
   try {
     const placeholderNames = JSON.parse(targetElement.dataset.placeholderNames || '[]');
     const placeholderValues = JSON.parse(targetElement.dataset.placeholderValues || '[]');
+    const literals = JSON.parse(targetElement.dataset.literals || '[]');
 
-    if (/\{[^}]+\}/.test(newValue) && placeholderValues.length > 0) {
-      renderedForDisplay = newValue.replace(/\{([^}]+)\}/g, function (full, key) {
-        if (/^\d+$/.test(key)) {
-          const index = parseInt(key, 10);
-          return placeholderValues[index] !== undefined ? placeholderValues[index] : full;
-        }
-        const position = placeholderNames.indexOf(key);
-        return position !== -1 && placeholderValues[position] !== undefined ? placeholderValues[position] : full;
-      });
-    }
+    // 使用新的渲染函数来显示页面文本
+    renderedForDisplay = renderDisplayText(newValue, placeholderNames, placeholderValues, literals);
   } catch (error) {
     console.warn('[i18n-editor] 无法读取 placeholder 数据：', error);
+    // 如果解析失败，直接使用新值
+    renderedForDisplay = newValue;
   }
 
   targetElement.textContent = renderedForDisplay;
   targetElement.dataset.i18nModified = 'true';
 
+  // 更新占位符数据（如果模板结构发生变化）
   const hasPlaceholdersNow = /\{[^}]+\}/.test(newValue);
   if (!hasPlaceholdersNow) {
     targetElement.dataset.placeholderNames = JSON.stringify([]);
     targetElement.dataset.placeholderValues = JSON.stringify([]);
+    targetElement.dataset.literals = JSON.stringify([]);
+  } else {
+    // 如果模板仍然包含占位符，保持现有的占位符数据
+    // 注意：这里假设占位符的结构没有改变
+    // 如果结构改变了，可能需要重新解析模板
   }
 
   closeEditor();
