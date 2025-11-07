@@ -24,8 +24,8 @@ const CONFIG = {
   DEBOUNCE_DELAY: 300,
 
   // 文本
-  EDIT_MODE_ON: '切换i18n编辑模式(ON)',
-  EDIT_MODE_OFF: '切换i18n编辑模式(OFF)',
+  EDIT_MODE_ON: '关闭编辑模式',
+  EDIT_MODE_OFF: '打开编辑模式',
   EXPORT_BUTTON_TEXT: '导出修改数据',
   CLEAR_BUTTON_TEXT: '重置修改',
   LANGUAGE_LABEL_TEXT: '请选择当前页面显示的语言: ',
@@ -466,6 +466,8 @@ function createButton(text, onClick) {
 }
 
 function createSelect(options, selectedValue, onChange) {
+  options.unshift({ value: '', text: '--请选择当前页面显示的语言--' });
+
   const select = document.createElement('select');
   select.className = 'select';
 
@@ -495,6 +497,12 @@ function createControlPanel() {
   uiRoot.className = CONFIG.WRAPPER_CLASS;
 
   const toggleButton = createButton(CONFIG.EDIT_MODE_OFF, function (event) {
+    // 没有选择语言，不允许开启编辑模式
+    if (!targetLang && !isEditModeActive) {
+      alert('先选择当前页面显示的语言');
+      return;
+    }
+
     isEditModeActive = !isEditModeActive;
     if (isEditModeActive) {
       event.target.textContent = CONFIG.EDIT_MODE_ON;
@@ -519,7 +527,7 @@ function createControlPanel() {
   const langOptions = Object.keys(reverseMap).map(function (item) {
     return { value: item, text: item };
   });
-  const select = createSelect(langOptions, langOptions[0].value, function (event) {
+  const select = createSelect(langOptions, '', function (event) {
     switchLanguage(event.target.value);
   });
 

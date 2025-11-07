@@ -71,7 +71,7 @@ export function generateEditorJS(i18nDB: I18nDB, config: I18nConfig) {
   const scriptContent = `/** ========== i18n-cli 动态插入内容 开始========== */
 const i18nDB = ${JSON.stringify(i18nDB, null, 2)};
 
-let targetLang = '${config.target_langs[0]}';
+let targetLang = '';
 
 /** ========== i18n-cli 动态生成内容 结束========== */
 
