@@ -8,7 +8,7 @@ import { importCommand } from '../commands/import.js';
 
 const program = new Command();
 
-program.name('i18n').description('A CLI tool for managing multilingual translations').version('0.0.8');
+program.name('i18n').description('A CLI tool for managing multilingual translations').version('0.0.9');
 
 program.addCommand(initCommand);
 program.addCommand(runCommand);
