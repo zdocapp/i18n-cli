@@ -87,13 +87,29 @@ function loadOrInitDB(config: any, dbPath: string): I18nDB {
 /**
  * 读取源语言文件
  */
-function loadSourceFile(config: any): any {
+function loadSourceFile(config: I18nConfig): Record<string, string> | undefined {
   const sourceFile = path.resolve(`${config.source_file}`);
   if (!fs.existsSync(sourceFile)) {
-    logger.error(`Source language file not found: ${sourceFile}`);
-    process.exit(1);
+    return undefined;
   }
-  return JSON.parse(fs.readFileSync(sourceFile, 'utf-8'));
+  const content = fs.readFileSync(sourceFile, 'utf-8')
+  // 解析 JSON 文件
+  if (config.source_file.includes('json')) {
+    return JSON.parse(content);
+  }
+  // 解析 JS/TS 文件
+  if (config.source_file.match(/\.js$|\.ts$/)) {
+    // export default { ... }
+    const match = content.match(/export\s+default\s*(\{[\s\S]*\})/);
+    if (match) {
+      const jsonStr = match[1]
+        .replace(/(\w+):/g, '"$1":')  // 给属性名加引号
+        .replace(/'/g, '"');           // 单引号转双引号
+      return JSON.parse(jsonStr);
+    }
+    return undefined;
+  }
+  return undefined;
 }
 
 /**
@@ -109,6 +125,10 @@ async function runPipeline(configPath: string) {
 
   // 2. 读取源语言文件
   const sourceContent = loadSourceFile(config);
+  if (!sourceContent) {
+    logger.error('Failed to load source language file');
+    process.exit(1);
+  }
 
   // 3. 加载或初始化 DB
   let db = loadOrInitDB(config, dbPath);
